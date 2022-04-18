@@ -5,21 +5,28 @@ import java.util.*;
 public class ConnectFourAI {
 
 	public static Game game;
+	public static AI ai;
 
 	public static void main(String[] args) throws Exception {
 		game = new Game();
+		ai = new AI();
 		game.print();
 
 		Scanner in = new Scanner(System.in);
 
+		//game.turn = 1;
+
 		while (game.winner == 0) {
+			int i;
 			if (game.isXTurn()) {
-				int i = in.nextInt();
-				game.move(Math.min(i-1, 6));
+				System.out.print("Enter a column (1-" + Game.WIDTH + "): ");
+				i = Math.min(in.nextInt()-1, Game.WIDTH-1);
 			} else {
-				int i = game.suggestMove();
-				game.move(i);
+				i = ai.suggestMove(game);
 			}
+
+			System.out.println("Placing at column " + (i+1));
+			game.move(i);
 			game.print();
 		}
 
