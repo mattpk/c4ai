@@ -4,13 +4,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.*;
 
 public class AI {
-	public static int DEPTH = 5;
+	public static int DEPTH = 6;
 	private int recursions = 0;
 	private int bestMove = -1;
 	private Game copy;
 
 	private void debug(String s) {
-		if (true) {
+		if (false) {
 			System.out.println(s);
 		}
 	}
@@ -80,7 +80,7 @@ public class AI {
 			}
 			return max;
 		} else {
-			double min = 1.0;
+			double min = 1.00;
 			for (Integer move : moves) {
 				game.move(move);
 				double ans = minimax(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer, depth+1);
@@ -119,7 +119,6 @@ public class AI {
 	}
 
 	private double simulate(Game game) {
-		// really naive, not re-using tree
 		copy.toGame(game);
 
 		while (game.winner == 0) {
