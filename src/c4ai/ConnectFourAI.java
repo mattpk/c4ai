@@ -17,16 +17,16 @@ public class ConnectFourAI {
 		//game.turn = 1;
 
 		while (game.winner == 0) {
-			int i;
+			int move;
 			if (game.isXTurn()) {
 				System.out.print("Enter a column (1-" + Game.WIDTH + "): ");
-				i = Math.min(in.nextInt()-1, Game.WIDTH-1);
+				move = Math.min(in.nextInt()-1, Game.WIDTH-1);
 			} else {
-				i = ai.suggestMove(game);
+				move = ai.suggestMove(game);
 			}
 
-			System.out.println("Placing at column " + (i+1));
-			game.move(i);
+			System.out.println("Placing at column " + (move+1));
+			game.move(move);
 			game.print();
 		}
 

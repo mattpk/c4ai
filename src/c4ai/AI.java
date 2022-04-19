@@ -4,8 +4,15 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.*;
 
 public class AI {
-	//public int DEPTH = 4;
+	public int DEPTH = 9;
+	private int recursions = 0;
 	private int bestMove = -1;
+
+	private void debug(String s) {
+		if (true) {
+			System.out.println(s);
+		}
+	}
 
 	private int randInt(int min, int max) {
 		return ThreadLocalRandom.current().nextInt(min, max);
@@ -18,33 +25,16 @@ public class AI {
 	}
 
 	public int suggestMove(Game game) {
-		boolean debug = false;
-		if (debug) {
-			List<Integer> moves = game.legalMoves();
-			boolean isMaximizing = game.isXTurn();
-			double best = isMaximizing ? -1000 : 1000;
-			for (Integer move : moves) {
-				game.move(move);
-				double val = minimax(game, Double.MIN_VALUE, Double.MAX_VALUE);
-				best = isMaximizing ? Math.max(best, val) : Math.min(best, val);
-				System.out.println("move " + (move+1) + ": " + val);
-				game.undo();
-			}
-		}
-
-		minimax(game, Double.MIN_VALUE, Double.MAX_VALUE, true);
+		bestMove = -1;
+		minimax(game, 0.0, 1.0, 0);
 		return bestMove;
 	}
 
-	// return number between 0 and 1
-	private double minimax(Game game, double minGuaranteedForMaximizer, double maxGuaranteedForMinimizer) {
-		return minimax(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer, false);
-	}
-
-	private double minimax(Game game, double minGuaranteedForMaximizer, double maxGuaranteedForMinimizer, boolean first) {
+	private double minimax(Game game, double minGuaranteedForMaximizer, double maxGuaranteedForMinimizer, int depth) {
 		boolean isMaximizing = game.isXTurn();
 		// base cases
 		double lengthIncentive = ((double)game.turn) / 1000;
+		
 		if (game.winner == 1) {
 			return 1.0 - lengthIncentive;
 		}
@@ -54,48 +44,63 @@ public class AI {
 		if (game.winner == 3) {
 			return 0.5;
 		}
+		if (depth >= DEPTH) {
+			return monteCarloValue(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer);
+		}
 		List<Integer> moves = game.legalMoves();
 
 		if (isMaximizing) {
-			double max = Integer.MIN_VALUE;
+			double max = 0.0;
 			for (Integer move : moves) {
 				game.move(move);
-				double ans = minimax(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer);
+				double ans = minimax(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer, depth+1);
 				if (ans > max) {
 					max = ans;
-					if (first) bestMove = move;
+					if (depth == 0) bestMove = move;
 				}
 				game.undo();
 
-				if (max >= maxGuaranteedForMinimizer) {
-					// The minimizer would never let the game get into this state
-					// since they already had a better guaranteed score\
-					break;
+				if (depth > 0) {
+					if (max >= maxGuaranteedForMinimizer) {
+						// The minimizer would never let the game get into this state
+						// since they already had a better guaranteed score\
+						break;
+					}
+					// update minimum guaranteed for further searching
+					minGuaranteedForMaximizer = Math.max(max, minGuaranteedForMaximizer);
+				} else {
+					debug("move " + (move+1) + ": " + String.format("%.12f", ans));
 				}
-				// update minimum guaranteed for further searching
-				minGuaranteedForMaximizer = Math.max(max, minGuaranteedForMaximizer);
 			}
 			return max;
 		} else {
-			double min = Integer.MAX_VALUE;
+			double min = 1.0;
 			for (Integer move : moves) {
 				game.move(move);
-				double ans = minimax(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer);
+				double ans = minimax(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer, depth+1);
 				if (ans < min) {
 					min = ans;
-					if (first) bestMove = move;
+					if (depth == 0) bestMove = move;
 				}
 				game.undo();
 
-				if (min <= minGuaranteedForMaximizer) {
-					// The maximizer would never let the game get into this state
-					// since they already had a better guaranteed score
-					break;
+				if (depth > 0) {
+					if (min <= minGuaranteedForMaximizer && depth > 0) {
+						// The maximizer would never let the game get into this state
+						// since they already had a better guaranteed score
+						break;
+					}
+					// update max guaranteed for further searching
+					maxGuaranteedForMinimizer = Math.min(min, maxGuaranteedForMinimizer);
+				} else {
+					debug("move " + (move+1) + ": " + String.format("%.12f", ans));
 				}
-				// update max guaranteed for further searching
-				maxGuaranteedForMinimizer = Math.min(min, maxGuaranteedForMinimizer);
 			}
 			return min;
 		}
+	}
+
+	private double monteCarloValue(Game game, double alpha, double beta) {
+		return (alpha + beta) / 2.0;
 	}
 }

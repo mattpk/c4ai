@@ -3,8 +3,8 @@ package c4ai;
 import java.util.*;
 
 public class Game {
-	public static int WIDTH = 5;
-	public static int HEIGHT = 4;
+	public static int WIDTH = 7;
+	public static int HEIGHT = 6;
 	public static int WIN_LENGTH = 4;
 
 	public int[][] grid;
@@ -144,7 +144,7 @@ public class Game {
 		int i = oi;
 		int j = oj;
 		int orig = grid[oi][oj];
-		int cnt = -1; // middle will be counted twice
+		int cnt = 0;
 		while (i >= 0 && j >= 0 && i < HEIGHT && j < WIDTH) {
 			if (grid[i][j] == orig) {
 				cnt++;
@@ -154,8 +154,8 @@ public class Game {
 			i += c;
 			j += d;
 		}
-		i = oi;
-		j = oj;
+		i = oi - c;
+		j = oj - d;
 		while (i >= 0 && j >= 0 && i < HEIGHT && j < WIDTH) {
 			if (grid[i][j] == orig) {
 				cnt++;
