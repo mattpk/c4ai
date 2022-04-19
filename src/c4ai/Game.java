@@ -2,6 +2,7 @@ package c4ai;
 
 import java.util.*;
 
+@SuppressWarnings (value="unchecked")
 public class Game {
 	public static int WIDTH = 7;
 	public static int HEIGHT = 6;
@@ -30,17 +31,22 @@ public class Game {
 	// copy constructor
 	public Game(Game game) {
 		heights = new int[WIDTH];
+		grid = new int[HEIGHT][WIDTH];
+		toGame(game);
+	}
+
+	public void toGame(Game game) {
 		for (int i = 0; i < heights.length; i++) {
 			heights[i] = game.heights[i];
 		}
-		grid = new int[HEIGHT][WIDTH];
 		for (int i = 0; i < grid.length; i++) {
 	 		for (int j = 0; j < grid[0].length; j++) {
 	 			grid[i][j] = game.grid[i][j];
 	 		}
 	 	}
 	 	turn = game.turn;
-	 	history = new Stack<Integer>();
+	 	winner = game.winner;
+	 	history = (Stack<Integer>) game.history.clone();
 	}
 
 	public String getWinnerName() {
@@ -82,12 +88,6 @@ public class Game {
 				moves.add(i);
 		}
 		return moves;
-	}
-
-	public Game moveCopy(int col) {
-		Game copy = new Game(this);
-		copy.move(col);
-		return copy;
 	}
 
 	public void undo() {

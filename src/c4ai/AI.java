@@ -4,9 +4,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.*;
 
 public class AI {
-	public int DEPTH = 9;
+	public static int DEPTH = 5;
 	private int recursions = 0;
 	private int bestMove = -1;
+	private Game copy;
 
 	private void debug(String s) {
 		if (true) {
@@ -25,15 +26,17 @@ public class AI {
 	}
 
 	public int suggestMove(Game game) {
+		copy = new Game(game);
 		bestMove = -1;
-		minimax(game, -0.01, 1.01, 0);
+		minimax(game, 0, 1, 0);
 		return bestMove;
 	}
 
 	private double minimax(Game game, double minGuaranteedForMaximizer, double maxGuaranteedForMinimizer, int depth) {
 		boolean isMaximizing = game.isXTurn();
 		// base cases
-		double lengthIncentive = ((double)game.turn) / 1000;
+		double salt = randInt(0, 1000) / 1000000.0;
+		double lengthIncentive = ((double)game.turn) / 1000 + salt;
 		
 		if (game.winner == 1) {
 			return 1.0 - lengthIncentive;
@@ -44,14 +47,13 @@ public class AI {
 		if (game.winner == 3) {
 			return 0.5;
 		}
-		if (depth >= DEPTH) {
-			return monteCarloValue(game, minGuaranteedForMaximizer, maxGuaranteedForMinimizer);
-		}
 		List<Integer> moves = game.legalMoves();
-		//preSortMoves(game, moves);
+
+		if (depth >= DEPTH) {
+			return monteCarloValue(game);
+		}
 
 		if (isMaximizing) {
-			if (depth == 0);
 			double max = 0.0;
 			for (Integer move : moves) {
 				game.move(move);
@@ -62,17 +64,19 @@ public class AI {
 				}
 				game.undo();
 
-				if (ans >= maxGuaranteedForMinimizer) {
+ 				if (ans > maxGuaranteedForMinimizer) {
 					// Any remaining subtrees aren't worth searching
 					// because the minimizer has a better option and
 					// would never choose this subtree
 					break;
 				}
-				 if (depth > 0)
+
+				if (depth > 0) {
 				 	// update minimum guaranteed for further searching
 					minGuaranteedForMaximizer = Math.max(max, minGuaranteedForMaximizer);
-				 if (depth == 0)
+				} else {
 					debug("move " + (move+1) + ": " + String.format("%.12f", ans));
+				}
 			}
 			return max;
 		} else {
@@ -86,28 +90,47 @@ public class AI {
 				}
 				game.undo();
 
-				if (ans <= minGuaranteedForMaximizer && depth > 0) {
+				if (ans < minGuaranteedForMaximizer) {
 					// The maximizer would never let the game get into this state
 					// since they already had a better guaranteed score
 					break;
 				}
-				 if (depth > 0)
+
+				if (depth > 0) {
 					// update max guaranteed for further searching
 					maxGuaranteedForMinimizer = Math.min(min, maxGuaranteedForMinimizer);
-				 if (depth == 0)
+				} else {
 					debug("move " + (move+1) + ": " + String.format("%.12f", ans));
+				}
 			}
 			return min;
 		}
 	}
 
-	private void preSortMoves(Game game, List<Integer> moves) {
-		Collections.sort(moves, Comparator.comparing(m -> {
-			return -game.simulateCountRays(m);
-		}));
+	private double monteCarloValue(Game game) {
+		// naive implementation, just run a bunch of simulations
+		int NUM_SIMS = 100;
+		int winsForX = 0;
+		for (int s = 0; s < NUM_SIMS; s++) {
+			winsForX += simulate(game);
+
+		}
+		return ((double)winsForX) / NUM_SIMS;
 	}
 
-	private double monteCarloValue(Game game, double alpha, double beta) {
-		return (alpha + beta) / 2.0;
+	private double simulate(Game game) {
+		// really naive, not re-using tree
+		copy.toGame(game);
+
+		while (game.winner == 0) {
+			int move = randomMove(game);
+			game.move(move);
+		}
+		double ans = 1;
+		if (game.winner == 2) ans = 0;
+		else if (game.winner == 3) ans = 0.5;
+
+		game.toGame(copy);
+		return ans;
 	}
 }
