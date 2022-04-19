@@ -23,6 +23,7 @@ public class Game {
 	 			grid[i][j] = 0;
 	 		}
 	 	}
+	 	turn = 0;
 	 	history = new Stack<Integer>();
 	}
 
@@ -105,9 +106,13 @@ public class Game {
 		move(col, isXTurn());
 	}
 
+	public int rowFromCol(int col) {
+		return HEIGHT-1-heights[col];
+	}
+
 	public void move(int col, boolean isX) {
 		int piece = isX ? 1 : 2;
-		int row = HEIGHT-1-heights[col];
+		int row = rowFromCol(col);
 		if (row < 0) {
 			System.out.println("Illegal move");
 			return;
@@ -119,11 +124,8 @@ public class Game {
 		history.push(col);
 
 		// calculate
-		int horiz = countRay(row, col, 0, 1);
-		int vert = countRay(row, col, 1, 0);
-		int cross = countRay(row, col, 1, 1);
-		int cross2 = countRay(row, col, 1, -1);
-		if (horiz >= WIN_LENGTH || vert >= WIN_LENGTH || cross >= WIN_LENGTH || cross2 >= WIN_LENGTH) {
+		
+		if (countMaxRays(row, col) >= WIN_LENGTH) {
 			win();
 		} else if (turn + 1 == WIDTH * HEIGHT) {
 			draw();
@@ -138,6 +140,30 @@ public class Game {
 	}
 	private void draw() {
 		winner = 3;
+	}
+
+	public int simulateCountRays(int col) {
+		int row = rowFromCol(col);
+		if (grid[row][col] != 0) {
+			return countMaxRays(row, col);
+		}
+		grid[row][col] = isXTurn() ? 1 : 2;
+		int ans = countMaxRays(row, col);
+		grid[row][col] = 0;
+		return ans;
+	}
+
+	public int countMaxRays(int row, int col) {
+		return Math.max(
+			Math.max(
+				countRay(row, col, 0, 1),
+				countRay(row, col, 1, 0)
+			),
+			Math.max(
+				countRay(row, col, 1, 1),
+				countRay(row, col, 1, -1)
+			)
+		);
 	}
 
 	private int countRay(int oi, int oj, int c, int d) {
