@@ -19,9 +19,9 @@ public class ConnectFourAI {
 		while (game.winner == 0) {
 			int move;
 			if (game.isXTurn()) {
-				move = ai.suggestMove(game);
-				// System.out.print("Enter a column (1-" + Game.WIDTH + "): ");
-				// move = Math.min(in.nextInt()-1, Game.WIDTH-1);
+				//move = ai.suggestMove(game);
+				System.out.print("Enter a column (1-" + Game.WIDTH + "): ");
+				move = Math.min(in.nextInt()-1, Game.WIDTH-1);
 			} else {
 				move = ai.suggestMove(game);
 				// System.out.print("Enter a column (1-" + Game.WIDTH + "): ");
